@@ -18,6 +18,9 @@ const (
 	Amplia        = 2
 	Personalizada = 3
 )
+
+//predefined layouts for use in Time.Format and Time.Parse
+//see https://golang.org/pkg/time/#pkg-constants
 const dateFormat = "2006-01-02"
 
 type Tipo int
@@ -92,19 +95,6 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 	polizas[1].FechaFin, _ = time.Parse(dateFormat, "2016-06-01")
 	polizas[1].Id = strconv.Itoa(cntIdPoliza)
 	cntIdPoliza += 1
-
-	/*cars := []Car{
-		Car{Make: "Ferrari", Model: "Spider", Colour: "blue", Owner: "guillermo"},
-		Car{Make: "Tesla", Model: "T", Colour: "red", Owner: "portillo"},
-		Car{Make: "Hyundai", Model: "Tucson", Colour: "green", Owner: "flores"},
-		Car{Make: "VW", Model: "Passat", Colour: "yellow", Owner: "Max"},
-		Car{Make: "Tesla", Model: "S", Colour: "black", Owner: "Adriana"},
-		Car{Make: "Peugeot", Model: "205", Colour: "purple", Owner: "Michel"},
-		Car{Make: "Chery", Model: "S22L", Colour: "white", Owner: "Aarav"},
-		Car{Make: "Fiat", Model: "Punto", Colour: "violet", Owner: "Pari"},
-		Car{Make: "Tata", Model: "Nano", Colour: "indigo", Owner: "Valeria"},
-		Car{Make: "Holden", Model: "Barina", Colour: "brown", Owner: "Shotaro"},
-	}*/
 
 	i := 0
 	for i < len(polizas) {
