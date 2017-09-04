@@ -110,7 +110,7 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) queryPoliza(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) polizaPorId(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
@@ -120,7 +120,7 @@ func (s *SmartContract) queryPoliza(APIstub shim.ChaincodeStubInterface, args []
 	return shim.Success(carAsBytes)
 }
 
-func (s *SmartContract) queryTodaPoliza(APIstub shim.ChaincodeStubInterface) sc.Response {
+func (s *SmartContract) todasPolizas(APIstub shim.ChaincodeStubInterface) sc.Response {
 
 	startKey := "0"
 	endKey := "999"
@@ -205,14 +205,14 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	// Retrieve the requested Smart Contract function and arguments
 	function, args := APIstub.GetFunctionAndParameters()
 	// Route to the appropriate handler function to interact with the ledger appropriately
-	if function == "queryPoliza" {
-		return s.queryPoliza(APIstub, args)
+	if function == "polizaPorId" {
+		return s.polizaPorId(APIstub, args)
 	} else if function == "initLedger" {
 		return s.initLedger(APIstub)
 	} else if function == "createPoliza" {
 		return s.createPoliza(APIstub, args)
-	} else if function == "queryTodaPoliza" {
-		return s.queryTodaPoliza(APIstub)
+	} else if function == "todasPolizas" {
+		return s.todasPolizas(APIstub)
 	} else if function == "changeInfoPoliza" {
 		return s.changeInfoPoliza(APIstub, args)
 	}
