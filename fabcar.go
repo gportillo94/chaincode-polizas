@@ -4,14 +4,13 @@ import "fmt"
 import "encoding/json"
 import "time"
 import "bytes"
-import "strconv"
+
+//import "strconv"
 import "github.com/hyperledger/fabric/core/chaincode/shim"
 import sc "github.com/hyperledger/fabric/protos/peer"
 
 type SmartContract struct {
 }
-
-var cntIdPoliza int = 1
 
 const (
 	Estandar      = 1
@@ -19,8 +18,10 @@ const (
 	Personalizada = 3
 )
 
-//predefined layouts for use in Time.Format and Time.Parse
-//see https://golang.org/pkg/time/#pkg-constants
+/*
+* predefined layouts for use in Time.Format and Time.Parse
+* see https://golang.org/pkg/time/#pkg-constants
+ */
 const dateFormat = "2006-01-02"
 
 type Tipo int
@@ -81,8 +82,7 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 	polizas[0].Aseguradora.IdAseguradora = "aseg01"
 	polizas[0].FechaIni, _ = time.Parse(dateFormat, "2015-01-30")
 	polizas[0].FechaFin, _ = time.Parse(dateFormat, "2016-06-01")
-	polizas[0].Id = strconv.Itoa(cntIdPoliza)
-	cntIdPoliza += 1
+	polizas[0].Id = "1"
 
 	polizas[1].Cliente.Nombre = "qwer"
 	polizas[1].Cliente.ApellidoPaterno = "asdf"
@@ -93,8 +93,7 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 	polizas[1].Aseguradora.IdAseguradora = "aseg01"
 	polizas[1].FechaIni, _ = time.Parse(dateFormat, "2015-01-30")
 	polizas[1].FechaFin, _ = time.Parse(dateFormat, "2016-06-01")
-	polizas[1].Id = strconv.Itoa(cntIdPoliza)
-	cntIdPoliza += 1
+	polizas[1].Id = "2"
 
 	i := 0
 	for i < len(polizas) {
@@ -111,31 +110,17 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 	return shim.Success(nil)
 }
 
-/*
- * The Invoke method is called as a result of an application request to run the Smart Contract "fabcar"
- * The calling application program has also specified the particular smart contract function to be called, with arguments
- */
-func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response {
+func (s *SmartContract) queryPoliza(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
-	// Retrieve the requested Smart Contract function and arguments
-	function, args := APIstub.GetFunctionAndParameters()
-	// Route to the appropriate handler function to interact with the ledger appropriately
-	if function == "queryCar" {
-		return s.queryCar(APIstub, args)
-	} else if function == "initLedger" {
-		return s.initLedger(APIstub)
-	} else if function == "createCar" {
-		return s.createCar(APIstub, args)
-	} else if function == "queryAllCars" {
-		return s.queryAllCars(APIstub)
-	} else if function == "changeCarOwner" {
-		return s.changeCarOwner(APIstub, args)
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	return shim.Error("Invalid Smart Contract function name.")
+	carAsBytes, _ := APIstub.GetState(args[0])
+	return shim.Success(carAsBytes)
 }
 
-func (s *SmartContract) queryAllCars(APIstub shim.ChaincodeStubInterface) sc.Response {
+func (s *SmartContract) queryTodaPoliza(APIstub shim.ChaincodeStubInterface) sc.Response {
 
 	startKey := "0"
 	endKey := "999"
@@ -182,46 +167,57 @@ func (s *SmartContract) queryAllCars(APIstub shim.ChaincodeStubInterface) sc.Res
 	return shim.Success(buffer.Bytes())
 }
 
-func (s *SmartContract) queryCar(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) createPoliza(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 
-	carAsBytes, _ := APIstub.GetState(args[0])
-	return shim.Success(carAsBytes)
-}
-
-func (s *SmartContract) createCar(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
-
-	if len(args) != 5 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
-	}
-
-	var car = Car{Make: args[1], Model: args[2], Colour: args[3], Owner: args[4]}
-
-	carAsBytes, _ := json.Marshal(car)
-	APIstub.PutState(args[0], carAsBytes)
+	var poliza Poliza
+	json.Unmarshal([]byte(args[0]), &poliza)
+	polizaAsBytes, _ := json.Marshal(poliza)
+	APIstub.PutState(poliza.Id, polizaAsBytes)
 
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) changeCarOwner(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) changeInfoPoliza(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
 
-	carAsBytes, _ := APIstub.GetState(args[0])
-	car := Car{}
-
-	json.Unmarshal(carAsBytes, &car)
-	car.Owner = args[1]
-
-	carAsBytes, _ = json.Marshal(car)
-	APIstub.PutState(args[0], carAsBytes)
+	var poliza Poliza
+	json.Unmarshal([]byte(args[1]), &poliza)
+	polizaAsBytes, _ := json.Marshal(poliza)
+	APIstub.PutState(args[0], polizaAsBytes)
 
 	return shim.Success(nil)
+}
+
+/*
+ * The Invoke method is called as a result of an application request to run the Smart Contract "fabcar"
+ * The calling application program has also specified the particular smart contract function to be called, with arguments
+ */
+
+func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response {
+
+	// Retrieve the requested Smart Contract function and arguments
+	function, args := APIstub.GetFunctionAndParameters()
+	// Route to the appropriate handler function to interact with the ledger appropriately
+	if function == "queryPoliza" {
+		return s.queryPoliza(APIstub, args)
+	} else if function == "initLedger" {
+		return s.initLedger(APIstub)
+	} else if function == "createPoliza" {
+		return s.createPoliza(APIstub, args)
+	} else if function == "queryTodaPoliza" {
+		return s.queryTodaPoliza(APIstub)
+	} else if function == "changeInfoPoliza" {
+		return s.changeInfoPoliza(APIstub, args)
+	}
+
+	return shim.Error("Invalid Smart Contract function name.")
 }
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
