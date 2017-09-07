@@ -27,7 +27,7 @@ function invoke(contractName, arrayOfArguments) {
     var client = null;
     var targets = [];
     var tx_id = null;
-    Promise.resolve().then(() => {
+    return Promise.resolve().then(() => {
         console.log("Create a client and set the wallet location");
         client = new hfc();
         return hfc.newDefaultKeyValueStore({ path: options.wallet_path });
@@ -151,5 +151,3 @@ function invoke(contractName, arrayOfArguments) {
 
 }
 exports.invoke = invoke; 
-//invoke("createPoliza", ['{"id":"123"}'])
-//invoke("changeInfoPoliza", ['123', '{"cliente":{"nombre":"guillermo", "apellidoPaterno":"portillo"}}'])

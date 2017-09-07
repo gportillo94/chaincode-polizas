@@ -23,7 +23,8 @@ var channel = {};
 var client = null;
 
 function query(nombreFuncion, argumentos) {
-	Promise.resolve().then(() => {
+
+	return Promise.resolve().then(() => {
 	    console.log("Create a client and set the wallet location");
 	    client = new hfc();
 	    return hfc.newDefaultKeyValueStore({ path: optionsQuery.wallet_path });
@@ -61,11 +62,9 @@ function query(nombreFuncion, argumentos) {
 	        console.error("error from query = ", query_responses[0]);
 	    }
 	    console.log("Response is ", query_responses[0].toString());
+	    return query_responses ; 
 	}).catch((err) => {
 	    console.error("Caught Error", err);
 	});
 }
 exports.query = query; 
-
-//query("polizaPorId", ["123"]);
-//query("todasPolizas", []);

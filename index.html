@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<button id="todasPolizas">todasPolizas</button><br />
+	<button id="polizaPorId">polizaPorId</button>
+	<input type="text" id="id"><br />
+	<button id="createPoliza">createPoliza</button>
+	<input type="text" id="create"><br />
+	<button id="changeInfoPoliza">changeInfoPoliza</button>
+	<input type="text" id="change"><br />
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script>
+		function success (data){
+			console.log("success");
+			console.log(data); 
+		}
+
+		function error(){
+			console.log("error"); 
+		}
+
+		$("#todasPolizas").on("click" , function(){
+			$.ajax({
+				url: "/todasPolizas",
+				type: "GET",
+				dataType: "json",
+			})
+			.done(success).fail(error);
+		});
+		$("#polizaPorId").on("click" , function(){
+			$.ajax({
+				url: "/polizaPorId",
+				type: "POST",
+				dataType: "json",
+				data: { id: $("#id").val()} 
+			})
+			.done(success).fail(error);
+		});
+		$("#createPoliza").on("click" , function(){
+			$.ajax({
+				url: "/createPoliza",
+				type: "POST",
+				dataType: "json",
+				data: { create: $("#create").val()} 
+			})
+			.done(success).fail(error);
+		});
+		$("#changeInfoPoliza").on("click" , function(){
+			$.ajax({
+				url: "/changeInfoPoliza",
+				type: "POST",
+				dataType: "json",
+				data: { change: $("#change").val()} 
+			})
+			.done(success).fail(error);
+		});
+
+	</script>
+</body>
+</html>

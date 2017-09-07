@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express"); 
 const morgan = require("morgan"); 
 const bodyParser  = require("body-parser"); 
@@ -9,20 +11,40 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(morgan("dev")); 
 
-
-app.get("/polizaPorId", function (req, res){
-	//query.query("polizaPorId", ["123"]);
+app.get("/", function(req, res){
+	res.sendFile(__dirname+"/index.html");
 });
 
 app.get("/todasPolizas", function(req, res){
-	//query.query("todasPolizas", []);
+	var prom = query.query("todasPolizas", []);
+	prom.then(function(polizas){
+		res.send(polizas[0].toString());
+	});
+});
 
+app.post("/polizaPorId", function (req, res){
+	var prom = query.query("polizaPorId", [req.body.id]);
+	prom.then(function(poliza){
+		res.send(poliza[0].toString());
+	});
 });
 
 app.post("/createPoliza", function(req, res){
-	//invoke.invoke("createPoliza", ['{"id":"123"}'])
+	var polizaAsString = req.body.create;
+	var prom = invoke.invoke("createPoliza", [polizaAsString])
+	prom.then(function(transactionID){
+		res.send(transactionID);
+	});
 });
 
 app.post("/changeInfoPoliza", function(req, res){
-	//invoke.invoke("changeInfoPoliza", ['123', '{"cliente":{"nombre":"guillermo", "apellidoPaterno":"portillo"}}'])
+	var polizaAsString = req.body.change; 
+	var poliza = JSON.parse(polizaAsString);
+	var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
+	prom.then(function(transactionID){
+		res.send(transactionID);
+	});
 });
+
+var port = process.env.VCAP_APP_PORT || 3333;
+app.listen(port);
