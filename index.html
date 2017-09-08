@@ -5,12 +5,19 @@
 </head>
 <body>
 	<button id="todasPolizas">todasPolizas</button><br />
+
 	<button id="polizaPorId">polizaPorId</button>
 	<input type="text" id="id"><br />
+
+	<button id="polizasPorAseguradora">polizasPorAseguradora</button>
+	<input type="text" id="aseguradora"><br />
+
 	<button id="createPoliza">createPoliza</button>
 	<input type="text" id="create"><br />
+
 	<button id="changeInfoPoliza">changeInfoPoliza</button>
 	<input type="text" id="change"><br />
+	
 	<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 	<script>
 		function success (data){
@@ -36,6 +43,15 @@
 				type: "POST",
 				dataType: "json",
 				data: { id: $("#id").val()} 
+			})
+			.done(success).fail(error);
+		});
+		$("#polizasPorAseguradora").on("click" , function(){
+			$.ajax({
+				url: "/polizasPorAseguradora",
+				type: "POST",
+				dataType: "json",
+				data: { aseguradora: $("#aseguradora").val()} 
 			})
 			.done(success).fail(error);
 		});

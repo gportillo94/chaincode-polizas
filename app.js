@@ -29,6 +29,14 @@ app.post("/polizaPorId", function (req, res){
 	});
 });
 
+app.post("/polizasPorAseguradora", function (req, res){
+	console.log(req.body.aseguradora);
+	var prom = query.query("polizasPorAseguradora", [req.body.aseguradora]);
+	prom.then(function(poliza){
+		res.send(poliza[0].toString());
+	});
+});
+
 app.post("/createPoliza", function(req, res){
 	var polizaAsString = req.body.create;
 	var prom = invoke.invoke("createPoliza", [polizaAsString])
