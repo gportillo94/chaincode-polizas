@@ -28,7 +28,6 @@ app.get("/", function(req, res){
 });
 
 app.post("/login", function (req,res){
-	console.log(req.body);
 	req.session.user = req.body.user; 
 	req.session.password = req.body.password; 
 	res.sendStatus(HTTP_OK);
@@ -36,7 +35,6 @@ app.post("/login", function (req,res){
 
 app.get("/todasPolizas", function(req, res){
 	/*
-	Entrada: Nada
 	Salida: Un arreglo de objetos, por ej.:
 		[
 			{"Key":"1", "Record":{
@@ -75,7 +73,7 @@ app.get("/todasPolizas", function(req, res){
 
 app.post("/polizaPorId", function (req, res){
 	/*
-	Entrada: {"id":"1234"}
+	Entrada: {"id":"string-id"}
 	Salida: Un objeto poliza, por ej.:
 	{	"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
 		"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
@@ -95,7 +93,7 @@ app.post("/polizaPorId", function (req, res){
 
 app.post("/polizasPorAseguradora", function (req, res){
 	/*
-	Entrada: {"aseguradora":"AXXA"}
+	Entrada: {"aseguradora":"nombre aseguradora"}
 	Salida: Ver salida de 'todasPolizas'
 	*/
 	var prom = query.query("polizasPorAseguradora", [req.body.aseguradora]);
@@ -108,22 +106,21 @@ app.post("/createPoliza", function(req, res){
 	/*
 	Entrada: JSON con la siguiente estructura
 	{create:
-		{	"aseguradora":{"idAseguradora":"","nombre":""},
+		'{	"aseguradora":{"idAseguradora":"","nombre":""},
 			"automovil":{"placa":"","vin":""},
 			"cliente":{"apellidoMaterno":"","apellidoPaterno":"","correo":"","nombre":"","telefono":""},
 			"estatus":false,
 			"fechaFin":"",
 			"fechaIni":"",
 			"tipo":0
-		}
+		}'
 	}
 	*/
-	console.log(req.body.create);
 	var poliza = JSON.parse(req.body.create);
 	poliza.id = (ID++).toString();  
 	var prom = invoke.invoke("createPoliza", [JSON.stringify(poliza)]);
 	prom.then(function(transactionID){
-		res.send(transactionID);
+		res.send({"id":poliza.id});
 	});
 });
 
@@ -131,7 +128,7 @@ app.post("/changeInfoPoliza", function(req, res){
 	/*
 	Entrada: JSON con la siguiente estructura
 	{change:
-		{	"aseguradora":{"idAseguradora":"","nombre":""},
+		'{	"aseguradora":{"idAseguradora":"","nombre":""},
 			"automovil":{"placa":"","vin":""},
 			"cliente":{"apellidoMaterno":"","apellidoPaterno":"","correo":"","nombre":"","telefono":""},
 			"estatus":false,
@@ -139,14 +136,14 @@ app.post("/changeInfoPoliza", function(req, res){
 			"fechaIni":"",
 			"id":"",
 			"tipo":0
-		}
+		}'
 	}
 	*/
 	var polizaAsString = req.body.change; 
 	var poliza = JSON.parse(polizaAsString);
 	var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
 	prom.then(function(transactionID){
-		res.send(transactionID);
+		res.send({"id":poliza.id});
 	});
 });
 
