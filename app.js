@@ -1,26 +1,21 @@
 "use strict";
 
 const express = require("express"); 
-const session = require("express-session");
 const morgan = require("morgan"); 
 const bodyParser  = require("body-parser"); 
 
 const app = express(); 
 const query = require("./query.js");
 const invoke = require("./invoke.js");
+
 var ID = 3; 
 var aseguradoras = ["AXXA", "Mapfre"];
+var policias = ["policia01", "policia02"];
 const HTTP_UNAUTHORIZED = 401; 
 
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(morgan("dev")); 
-
-app.use(session({
-  secret: "this is secret",
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 860000 },
-}));
 
 app.get("/", function(req, res){
 	res.sendFile(__dirname+"/testIndex.html");
@@ -28,18 +23,25 @@ app.get("/", function(req, res){
 
 app.post("/login", function (req,res){
 	if (aseguradoras.indexOf(req.body.user) >= 0){
-		req.session.tipo = "aseguradora";
-		res.send({tipo:"aseguradora"});
+		res.send({	tipo:"aseguradora",
+					usuario:req.body.user});
+	}
+	else if (policias.indexOf(req.body.user) >= 0){
+		res.send({	tipo:"policia",
+					usuario:req.body.user});
 	}
 	else{
-		req.session.tipo = "policia";
-		res.send({tipo:"policia"});
+		res.sendStatus(HTTP_UNAUTHORIZED);
 	}
 	
 });
 
-app.get("/todasPolizas", function(req, res){
+app.post("/todasPolizas", function(req, res){
 	/*
+	Entrada: JSON con la siguiente estructura
+	{
+		"tipo": "policia"
+	}
 	Salida: Un arreglo de objetos, por ej.:
 		[
 			{"Key":"1", "Record":{
@@ -64,7 +66,7 @@ app.get("/todasPolizas", function(req, res){
 			}
 		]
 	*/
-	if (req.session.tipo == "policia"){
+	if (req.body.tipo == "policia"){
 		var prom = query.query("todasPolizas", []);
 		prom.then(function(polizas){
 			res.send(polizas[0].toString());
@@ -78,7 +80,11 @@ app.get("/todasPolizas", function(req, res){
 
 app.post("/polizaPorId", function (req, res){
 	/*
-	Entrada: {"id":"string-id"}
+	Entrada: JSON con la siguiente estructura
+	{
+		"tipo": "policia | aseguradora",
+		"id": "1"
+	}
 	Salida: Un objeto poliza, por ej.:
 	{	"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
 		"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
@@ -90,7 +96,7 @@ app.post("/polizaPorId", function (req, res){
 		"tipo":0
 	}
 	*/
-	if (req.session.tipo == "policia" || req.session.tipo == "aseguradora"){
+	if (req.body.tipo == "policia" || req.body.tipo == "aseguradora"){
 		var prom = query.query("polizaPorId", [req.body.id]);
 		prom.then(function(poliza){
 			res.send(poliza[0].toString());
@@ -104,10 +110,14 @@ app.post("/polizaPorId", function (req, res){
 
 app.post("/polizasPorAseguradora", function (req, res){
 	/*
-	Entrada: {"aseguradora":"nombre aseguradora"}
+	Entrada: JSON con la siguiente estructura
+	{
+		"tipo": "aseguradora",
+		"aseguradora": "AXXA"
+	}
 	Salida: Ver salida de 'todasPolizas'
 	*/
-	if (req.session.tipo == "aseguradora"){
+	if (req.body.tipo == "aseguradora"){
 		var prom = query.query("polizasPorAseguradora", [req.body.aseguradora]);
 		prom.then(function(poliza){
 			res.send(poliza[0].toString());
@@ -122,19 +132,26 @@ app.post("/polizasPorAseguradora", function (req, res){
 app.post("/createPoliza", function(req, res){
 	/*
 	Entrada: JSON con la siguiente estructura
-	{create:
-		'{	"aseguradora":{"idAseguradora":"","nombre":""},
+	{
+		"tipo": "aseguradora",
+		"create": {
+			"aseguradora":{"idAseguradora":"","nombre":""},
 			"automovil":{"placa":"","vin":""},
 			"cliente":{"apellidoMaterno":"","apellidoPaterno":"","correo":"","nombre":"","telefono":""},
 			"estatus":false,
 			"fechaFin":"",
 			"fechaIni":"",
 			"tipo":0
-		}'
+		}
+	}
+	Salida:
+	{
+		"id":"string con el id de la poliza creada"
 	}
 	*/
-	if (req.session.tipo == "aseguradora"){
-		var poliza = JSON.parse(req.body.create);
+	console.log(req.body);
+	if (req.body.tipo == "aseguradora"){
+		var poliza = req.body.create;
 		poliza.id = (ID++).toString();  
 		var prom = invoke.invoke("createPoliza", [JSON.stringify(poliza)]);
 		prom.then(function(transactionID){
@@ -150,8 +167,11 @@ app.post("/createPoliza", function(req, res){
 app.post("/changeInfoPoliza", function(req, res){
 	/*
 	Entrada: JSON con la siguiente estructura
-	{change:
-		'{	"aseguradora":{"idAseguradora":"","nombre":""},
+	{
+		"usuario": "AXXA", 
+		"tipo": "aseguradora",
+		"change": {
+			"aseguradora":{"idAseguradora":"","nombre":""},
 			"automovil":{"placa":"","vin":""},
 			"cliente":{"apellidoMaterno":"","apellidoPaterno":"","correo":"","nombre":"","telefono":""},
 			"estatus":false,
@@ -159,16 +179,26 @@ app.post("/changeInfoPoliza", function(req, res){
 			"fechaIni":"",
 			"id":"",
 			"tipo":0
-		}'
+		}
+	}
+	Salida:
+	{
+		"id":"string con el id de la poliza modificada"
 	}
 	*/
-	if(req.session.tipo == "aseguradora"){
-		var polizaAsString = req.body.change; 
-		var poliza = JSON.parse(polizaAsString);
-		var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
-		prom.then(function(transactionID){
-			res.send({"id":poliza.id});
-		});	
+	if(req.body.tipo == "aseguradora"){
+		var poliza = req.body.change;
+		if (poliza.aseguradora.nombre == req.body.usuario){
+			var polizaAsString = JSON.stringify(poliza);
+			var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
+			prom.then(function(transactionID){
+				res.send({"id":poliza.id});
+			});		
+		}
+		else{
+			res.sendStatus(HTTP_UNAUTHORIZED);	
+		}
+		
 	}
 	else{
 		res.sendStatus(HTTP_UNAUTHORIZED);
