@@ -6,13 +6,12 @@ const morgan = require("morgan");
 const bodyParser  = require("body-parser"); 
 
 const app = express(); 
-var query = require("./query.js");
-var invoke = require("./invoke.js");
+const query = require("./query.js");
+const invoke = require("./invoke.js");
 var ID = 3; 
-const HTTP_OK = 200; 
+var aseguradoras = ["AXXA", "Mapfre"];
 const HTTP_UNAUTHORIZED = 401; 
 
-app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(morgan("dev")); 
 
@@ -24,13 +23,19 @@ app.use(session({
 }));
 
 app.get("/", function(req, res){
-	res.sendFile(__dirname+"/index.html");
+	res.sendFile(__dirname+"/testIndex.html");
 });
 
 app.post("/login", function (req,res){
-	req.session.user = req.body.user; 
-	req.session.password = req.body.password; 
-	res.sendStatus(HTTP_OK);
+	if (aseguradoras.indexOf(req.body.user) >= 0){
+		req.session.tipo = "aseguradora";
+		res.send({tipo:"aseguradora"});
+	}
+	else{
+		req.session.tipo = "policia";
+		res.send({tipo:"policia"});
+	}
+	
 });
 
 app.get("/todasPolizas", function(req, res){
@@ -59,7 +64,7 @@ app.get("/todasPolizas", function(req, res){
 			}
 		]
 	*/
-	if (req.session.user){
+	if (req.session.tipo == "policia"){
 		var prom = query.query("todasPolizas", []);
 		prom.then(function(polizas){
 			res.send(polizas[0].toString());
@@ -85,10 +90,16 @@ app.post("/polizaPorId", function (req, res){
 		"tipo":0
 	}
 	*/
-	var prom = query.query("polizaPorId", [req.body.id]);
-	prom.then(function(poliza){
-		res.send(poliza[0].toString());
-	});
+	if (req.session.tipo == "policia" || req.session.tipo == "aseguradora"){
+		var prom = query.query("polizaPorId", [req.body.id]);
+		prom.then(function(poliza){
+			res.send(poliza[0].toString());
+		});	
+	}
+	else{
+		res.sendStatus(HTTP_UNAUTHORIZED);
+	}
+	
 });
 
 app.post("/polizasPorAseguradora", function (req, res){
@@ -96,10 +107,16 @@ app.post("/polizasPorAseguradora", function (req, res){
 	Entrada: {"aseguradora":"nombre aseguradora"}
 	Salida: Ver salida de 'todasPolizas'
 	*/
-	var prom = query.query("polizasPorAseguradora", [req.body.aseguradora]);
-	prom.then(function(poliza){
-		res.send(poliza[0].toString());
-	});
+	if (req.session.tipo == "aseguradora"){
+		var prom = query.query("polizasPorAseguradora", [req.body.aseguradora]);
+		prom.then(function(poliza){
+			res.send(poliza[0].toString());
+		});	
+	}
+	else{
+		res.sendStatus(HTTP_UNAUTHORIZED);
+	}
+	
 });
 
 app.post("/createPoliza", function(req, res){
@@ -116,12 +133,18 @@ app.post("/createPoliza", function(req, res){
 		}'
 	}
 	*/
-	var poliza = JSON.parse(req.body.create);
-	poliza.id = (ID++).toString();  
-	var prom = invoke.invoke("createPoliza", [JSON.stringify(poliza)]);
-	prom.then(function(transactionID){
-		res.send({"id":poliza.id});
-	});
+	if (req.session.tipo == "aseguradora"){
+		var poliza = JSON.parse(req.body.create);
+		poliza.id = (ID++).toString();  
+		var prom = invoke.invoke("createPoliza", [JSON.stringify(poliza)]);
+		prom.then(function(transactionID){
+			res.send({"id":poliza.id});
+		});	
+	}
+	else{
+		res.sendStatus(HTTP_UNAUTHORIZED);
+	}
+	
 });
 
 app.post("/changeInfoPoliza", function(req, res){
@@ -139,13 +162,18 @@ app.post("/changeInfoPoliza", function(req, res){
 		}'
 	}
 	*/
-	var polizaAsString = req.body.change; 
-	var poliza = JSON.parse(polizaAsString);
-	var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
-	prom.then(function(transactionID){
-		res.send({"id":poliza.id});
-	});
+	if(req.session.tipo == "aseguradora"){
+		var polizaAsString = req.body.change; 
+		var poliza = JSON.parse(polizaAsString);
+		var prom = invoke.invoke("changeInfoPoliza", [poliza.id, polizaAsString]);
+		prom.then(function(transactionID){
+			res.send({"id":poliza.id});
+		});	
+	}
+	else{
+		res.sendStatus(HTTP_UNAUTHORIZED);
+	}
 });
 
-var port = process.env.VCAP_APP_PORT || 1234;
+var port = process.env.VCAP_APP_PORT || 3214;
 app.listen(port);

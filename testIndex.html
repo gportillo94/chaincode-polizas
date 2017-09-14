@@ -4,6 +4,11 @@
 	<title></title>
 </head>
 <body>
+
+	<button id="login">login</button><br />
+	<input type="text" id="user"><br />
+	<input type="text" id="password"><br />	
+
 	<button id="todasPolizas">todasPolizas</button><br />
 
 	<button id="polizaPorId">polizaPorId</button>
@@ -28,6 +33,17 @@
 		function error(){
 			console.log("error"); 
 		}
+
+		$("#login").on("click" , function(){
+			$.ajax({
+				url: "/login",
+				type: "POST",
+				dataType: "json",
+				data: { user: $("#user").val(),
+						password: $("#password").val()} 
+			})
+			.done(success).fail(error);
+		});
 
 		$("#todasPolizas").on("click" , function(){
 			$.ajax({
