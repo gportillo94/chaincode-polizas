@@ -22,6 +22,18 @@ app.get("/", function(req, res){
 });
 
 app.post("/login", function (req,res){
+	/*
+	Entrada: JSON con la siguiente estructura
+	{
+		"user": "nombre de usuario, ver los arreglos aseguradoras y policias",
+		"password": "no se usa"
+	}
+	Salida: JSON con la siguiente estructura
+	{
+		"tipo": "aseguradora | policia",
+		"usuario": "el mismo que el user de entrada"
+	}
+	*/
 	if (aseguradoras.indexOf(req.body.user) >= 0){
 		res.send({	tipo:"aseguradora",
 					usuario:req.body.user});
@@ -43,28 +55,28 @@ app.post("/todasPolizas", function(req, res){
 		"tipo": "policia"
 	}
 	Salida: Un arreglo de objetos, por ej.:
-		[
-			{"Key":"1", "Record":{
-				"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
-				"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
-				"cliente":{"apellidoMaterno":"flores","apellidoPaterno":"portillo","correo":"","nombre":"guillermo","telefono":""},
-				"estatus":false,
-				"fechaFin":"2016-06-01T00:00:00Z",
-				"fechaIni":"2015-01-30T00:00:00Z",
-				"id":"1",
-				"tipo":0}
-			},
-			{"Key":"2", "Record":{
-				"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
-				"automovil":{"placa":"DEF456","vin":"h0l4mund0"},
-				"cliente":{"apellidoMaterno":"zxcv","apellidoPaterno":"asdf","correo":"","nombre":"qwer","telefono":""},
-				"estatus":false,
-				"fechaFin":"2016-06-01T00:00:00Z",
-				"fechaIni":"2015-01-30T00:00:00Z",
-				"id":"2",
-				"tipo":0}
-			}
-		]
+	[
+		{"Key":"1", "Record":{
+			"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
+			"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
+			"cliente":{"apellidoMaterno":"flores","apellidoPaterno":"portillo","correo":"","nombre":"guillermo","telefono":""},
+			"estatus":false,
+			"fechaFin":"2016-06-01T00:00:00Z",
+			"fechaIni":"2015-01-30T00:00:00Z",
+			"id":"1",
+			"tipo":0}
+		},
+		{"Key":"2", "Record":{
+			"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
+			"automovil":{"placa":"DEF456","vin":"h0l4mund0"},
+			"cliente":{"apellidoMaterno":"zxcv","apellidoPaterno":"asdf","correo":"","nombre":"qwer","telefono":""},
+			"estatus":false,
+			"fechaFin":"2016-06-01T00:00:00Z",
+			"fechaIni":"2015-01-30T00:00:00Z",
+			"id":"2",
+			"tipo":0}
+		}
+	]
 	*/
 	if (req.body.tipo == "policia"){
 		var prom = query.query("todasPolizas", []);
