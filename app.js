@@ -175,5 +175,5 @@ app.post("/changeInfoPoliza", function(req, res){
 	}
 });
 
-var port = process.env.VCAP_APP_PORT || 3214;
+var port = process.env.VCAP_APP_PORT || 4321;
 app.listen(port);
