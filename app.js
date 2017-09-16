@@ -23,15 +23,15 @@ app.get("/", function(req, res){
 
 app.post("/login", function (req,res){
 	/*
-	Entrada: JSON con la siguiente estructura
+	Entrada:
 	{
-		"user": "nombre de usuario, ver los arreglos aseguradoras y policias",
+		"user":<algun usuario del los arreglos aseguradoras o policias>,
 		"password": "no se usa"
 	}
-	Salida: JSON con la siguiente estructura
+	Salida:
 	{
 		"tipo": "aseguradora | policia",
-		"usuario": "el mismo que el user de entrada"
+		"usuario": "el mismo que en la solicitud"
 	}
 	*/
 	if (aseguradoras.indexOf(req.body.user) >= 0){
@@ -55,28 +55,28 @@ app.post("/todasPolizas", function(req, res){
 		"tipo": "policia"
 	}
 	Salida: Un arreglo de objetos, por ej.:
-	[
-		{"Key":"1", "Record":{
-			"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
-			"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
-			"cliente":{"apellidoMaterno":"flores","apellidoPaterno":"portillo","correo":"","nombre":"guillermo","telefono":""},
-			"estatus":false,
-			"fechaFin":"2016-06-01T00:00:00Z",
-			"fechaIni":"2015-01-30T00:00:00Z",
-			"id":"1",
-			"tipo":0}
-		},
-		{"Key":"2", "Record":{
-			"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
-			"automovil":{"placa":"DEF456","vin":"h0l4mund0"},
-			"cliente":{"apellidoMaterno":"zxcv","apellidoPaterno":"asdf","correo":"","nombre":"qwer","telefono":""},
-			"estatus":false,
-			"fechaFin":"2016-06-01T00:00:00Z",
-			"fechaIni":"2015-01-30T00:00:00Z",
-			"id":"2",
-			"tipo":0}
-		}
-	]
+		[
+			{"Key":"1", "Record":{
+				"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
+				"automovil":{"placa":"ABC123","vin":"h0l4mund0"},
+				"cliente":{"apellidoMaterno":"flores","apellidoPaterno":"portillo","correo":"","nombre":"guillermo","telefono":""},
+				"estatus":false,
+				"fechaFin":"2016-06-01T00:00:00Z",
+				"fechaIni":"2015-01-30T00:00:00Z",
+				"id":"1",
+				"tipo":0}
+			},
+			{"Key":"2", "Record":{
+				"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
+				"automovil":{"placa":"DEF456","vin":"h0l4mund0"},
+				"cliente":{"apellidoMaterno":"zxcv","apellidoPaterno":"asdf","correo":"","nombre":"qwer","telefono":""},
+				"estatus":false,
+				"fechaFin":"2016-06-01T00:00:00Z",
+				"fechaIni":"2015-01-30T00:00:00Z",
+				"id":"2",
+				"tipo":0}
+			}
+		]
 	*/
 	if (req.body.tipo == "policia"){
 		var prom = query.query("todasPolizas", []);
@@ -95,7 +95,8 @@ app.post("/polizaPorId", function (req, res){
 	Entrada: JSON con la siguiente estructura
 	{
 		"tipo": "policia | aseguradora",
-		"id": "1"
+		"id": "1",
+		"idAseguradora" : "someIdAseg"
 	}
 	Salida: Un objeto poliza, por ej.:
 	{	"aseguradora":{"idAseguradora":"aseg01","nombre":"AXXA"},
@@ -108,16 +109,20 @@ app.post("/polizaPorId", function (req, res){
 		"tipo":0
 	}
 	*/
-	if (req.body.tipo == "policia" || req.body.tipo == "aseguradora"){
-		var prom = query.query("polizaPorId", [req.body.id]);
-		prom.then(function(poliza){
+	var objPol; 
+	var prom = query.query("polizaPorId", [req.body.id]);
+	prom.then(function(poliza){
+		objPol = JSON.parse(poliza[0].toString());
+		if (req.body.tipo == "policia"){
 			res.send(poliza[0].toString());
-		});	
-	}
-	else{
-		res.sendStatus(HTTP_UNAUTHORIZED);
-	}
-	
+		}
+		else if (req.body.tipo == "aseguradora" && objPol.aseguradora.idAseguradora == req.body.idAseguradora){
+			res.send(poliza[0].toString());
+		}
+		else{
+			res.sendStatus(HTTP_UNAUTHORIZED);
+		}
+	});		
 });
 
 app.post("/polizasPorAseguradora", function (req, res){
